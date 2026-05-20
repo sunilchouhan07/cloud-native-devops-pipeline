@@ -1,0 +1,65 @@
+name: CI Pipeline 
+on:
+  push:
+    branches:
+      - main
+    paths:
+    - "gitops-k8s/apps/**"
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+
+    env:
+      IMAGE_TAG: ${{ github.sha }}
+      ECR_REPOSITORY: dev-gitops-repo
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with: 
+          fetch-depth: 0
+          persist-credentials: true 
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::364478544576:role/100DaysOfDevOps
+          aws-region: ap-south-1
+
+      - name: Login to ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name:  Build and Push 
+        working-directory: gitops-k8s/apps/
+        run: | 
+          docker build -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG .
+          docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG
+
+      - name: Helm Lint
+        run: helm lint gitops-k8s/helm/myapp
+
+      - name: Helm Template Validation
+        run: |
+          helm template myapp gitops-k8s/helm/myapp > /dev/null
+
+      - name: Update Helm Image Tag 
+        run: |
+          sed -i "s/tag:.*/tag: ${{ github.sha }}/" gitops-k8s/helm/myapp/values.yaml
+
+      - name: Commit Updated Helm Values 
+        run: |
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "github-actions"
+
+          git add gitops-k8s/helm/myapp/values.yaml 
+          git commit -m "Update image tag to ${{ github.sha }}" || echo "No changes"
+
+      - name: Push Changes 
+        run: |
+          git pull --rebase
+          git push

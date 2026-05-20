@@ -1,0 +1,43 @@
+name: CD Pipeline 
+on:
+  workflow_dispatch:
+
+jobs:
+  argocd:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::364478544576:role/100DaysOfDevOps
+          aws-region: ap-south-1
+
+      - name: Login to EKS Cluster
+        run: aws eks update-kubeconfig --region ap-south-1 --name dev-gitops-cluster
+
+      - name: Wait for ArgoCD
+        run: |
+          kubectl wait --for=condition=available deployment/dev-argocd-server -n argocd --timeout=120s
+
+      - name: Verify ArgoCD
+        run: kubectl get pods -n argocd 
+
+      - name: Verify ArgoCD Services
+        run: kubectl get svc -n argocd 
+
+      - name: Wait for ArgoCD CRDs 
+        run: |
+          kubectl wait --for condition=established crd/applications.argoproj.io --timeout=120s
+
+      - name: Deploy app manifest
+        working-directory: gitops-k8s/argocd
+        run: kubectl apply -f application.yaml
+
+      - name: Verify Applications
+        run: kubectl get applications -n argocd
