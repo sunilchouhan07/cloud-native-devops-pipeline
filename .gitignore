@@ -1,0 +1,80 @@
+# =========================
+# Terraform
+# =========================
+
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+.terraform/
+.terraform.lock.hcl
+
+tfplan
+*.tfplan
+
+# =========================
+# Kubernetes / Helm
+# =========================
+
+*.tgz
+
+# =========================
+# Logs
+# =========================
+
+*.log
+
+# =========================
+# Environment Files
+# =========================
+
+.env
+.env.*
+
+# =========================
+# IDE / Editor
+# =========================
+
+.vscode/
+.idea/
+
+# =========================
+# OS Files
+# =========================
+
+.DS_Store
+Thumbs.db
+
+# =========================
+# Python
+# =========================
+
+__pycache__/
+*.pyc
+
+# =========================
+# Node
+# =========================
+
+node_modules/
+
+# =========================
+# Helm Generated
+# =========================
+
+charts/
+tmpcharts/
+
+# =========================
+# Sensitive Files
+# =========================
+
+terraform.tfvars
+*.pem
+*.key

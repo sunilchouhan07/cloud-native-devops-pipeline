@@ -1,13 +1,14 @@
-name: Provision Infra
+name: Infrastructure Provision
 on:
   workflow_dispatch:
 
 jobs:
-  plan-apply:
+  core-infra:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
       contents: read
+    working-directory: terraform/Infrastructure
       
     steps:
       - name: Checkout Code 
@@ -23,26 +24,67 @@ jobs:
         uses: hashicorp/setup-terraform@v3 
       
       - name: Terraform Initialize
-        working-directory: terraform
         run: |
           terraform init
           terraform validate
+      - name: Create and Select Workspace
+        run: |
+          terraform workspace select dev || terraform workspace new dev 
                   
       - name: Terraform Plan
-        working-directory: terraform
-        env:
-          TF_VAR_slack_webhook_url: ${{ secrets.WEBHOOK_URL }}
-        run: |
-          terraform plan -out=tfplan
+        run: terraform plan -out=tfplan
 
       - name: Artifact Plan
         uses: actions/upload-artifact@v4
         with:
           name: tfplan
-          path: terraform/tfplan
+          path: terraform/Infrastructure/tfplan
 
       - name: Terraform Apply
-        working-directory: terraform
         run: terraform apply -auto-approve tfplan
 
-        
+
+  argocd:
+    needs: core-infra 
+    runs-on: ubuntu-latest
+    working-directory: terraform/Cluster-Bootstrap
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout Code 
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::364478544576:role/100DaysOfDevOps
+          aws-region: ap-south-1
+
+      - name: Terraform Setup
+        uses: hashicorp/setup-terraform@v3 
+      
+      - name: Terraform Initialize
+        run: |
+          terraform init
+          terraform validate
+
+      - name: Create and Select Workspace
+        run: |
+          terraform workspace select dev || terraform workspace new dev 
+
+                  
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan
+
+      - name: Artifact Plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan
+          path: terraform/Cluster-Bootstrap/tfplan
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve tfplan
+
+    
