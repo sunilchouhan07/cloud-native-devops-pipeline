@@ -38,7 +38,7 @@ jobs:
       - name: Deploy ArgoCD Applications
         working-directory: gitops-k8s/argocd
         run: |
-          kubectl apply -f *.yaml
+          kubectl apply -f .
 
       - name: Verify Applications Health
         run: kubectl get applications -n argocd
