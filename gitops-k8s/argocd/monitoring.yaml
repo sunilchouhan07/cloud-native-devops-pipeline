@@ -13,9 +13,9 @@ spec:
     chart: kube-prometheus-stack
     targetRevision: 75.6.2
   
-  helm:
-    valueFiles:
-      - $values/gitops-k8s/monitoring/values.yaml
+    helm:
+      valueFiles:
+        - $values/gitops-k8s/monitoring/values.yaml
 
     repoURL: https://github.com/sunilchouhan07/cloud-native-devops-pipeline.git 
     targetRevision: feature1 
