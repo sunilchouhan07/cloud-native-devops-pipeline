@@ -12,16 +12,27 @@ resource "aws_iam_role" "eks_cluster_role" {
   })
 }
 
-# resource "aws_iam_openid_connect_provider" "eks_connect" {
-#   url = data.aws_eks_cluster.eks.identity[0].oidc[0].issuer
-#   client_id_list = ["sts.amazonaws.com"]
-#   thumbprint_list = [
-#     data.tls_certificate.eks_certificate.certificates[0].sha1_fingerprint
-#   ]
-#   depends_on = [aws_eks_cluster.eks]
-# }
+
+resource "aws_eks_access_entry" "github_actions" {
+  cluster_name  = aws_eks_cluster.eks.name
+  principal_arn = "arn:aws:iam::364478544576:role/100DaysOfDevOps"
+  type          = "STANDARD"
+
+  depends_on = [aws_eks_cluster.eks]
+}
 
 
+resource "aws_eks_access_policy_association" "github_actions_admin" {
+  cluster_name  = aws_eks_cluster.eks.name
+  principal_arn = aws_eks_access_entry.github_actions.principal_arn
+  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+
+  access_scope {
+    type = "cluster"
+  }
+
+  depends_on = [aws_eks_access_entry.github_actions]
+}
 
 
 resource "aws_iam_role_policy_attachment" "eks_policy_attach" {
@@ -38,6 +49,7 @@ resource "aws_iam_role_policy_attachment" "eks_service_policy_attach" {
 resource "aws_eks_cluster" "eks" {
   name     = var.cluster_name
   role_arn = aws_iam_role.eks_cluster_role.arn
+  
   vpc_config {
     subnet_ids = concat(var.private_subnet_ids,
     var.public_subnet_ids
@@ -45,10 +57,16 @@ resource "aws_eks_cluster" "eks" {
     endpoint_private_access = true
     endpoint_public_access  = true
   }
+
   depends_on = [
     aws_iam_role_policy_attachment.eks_policy_attach,
     aws_iam_role_policy_attachment.eks_service_policy_attach
   ]
+
+  access_config {
+    authentication_mode = "API_AND_CONFIG_MAP"
+  }
+
   tags = {
     Name = "${var.env}-eks"
     Environment = var.env
