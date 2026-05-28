@@ -18,7 +18,7 @@ spec:
         - $values/gitops-k8s/monitoring/values.yaml
 
     repoURL: https://github.com/sunilchouhan07/cloud-native-devops-pipeline.git 
-    targetRevision: feature1 
+    targetRevision: main 
     ref: values
 
 
