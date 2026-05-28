@@ -33,56 +33,13 @@ jobs:
 
       - name: Wait for ArgoCD CRDs 
         run: |
-          kubectl wait --for condition=established crd/applications.argoproj.io --timeout=120s
+          kubectl wait --for condition=established crd/applications.argoproj.io --timeout=180s
 
-      - name: Deploy app manifest
+      - name: Deploy ArgoCD Applications
         working-directory: gitops-k8s/argocd
-        run: kubectl apply -f application.yaml
+        run: |
+          kubectl apply -f application.yaml
+          kubectl apply -f monitoring.yaml 
 
-      - name: Verify Applications
+      - name: Verify Applications Health
         run: kubectl get applications -n argocd
-
-
-
-
-
-
-  monitoring-Validation:
-    needs: argocd
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Setup Helm 
-        uses: azure/setup-helm@v4 
-      
-
-      - name: Add Helm Repo
-        run: |
-          helm repo add prometheus-community \
-          https://prometheus-community.github.io/helm-charts
-
-          helm repo update 
-
-      - name: Helm Lint 
-        run: |
-          helm lint  prometheus-community/kube-prometheus-stack \ 
-          -f monitoring/values.yaml 
-        
-      - name: Helm Template Validation
-        run: |
-          helm template monitoring \
-          prometheus-community/kube-prometheus-stack \ 
-          -f monitoring/values.yaml > rendered.yaml
-
-      - name: Verify Rendered YAML 
-        run: |
-          test -s rendered.yaml 
-        
-      - name: Upload Rendered Manifest 
-        uses: actions/upload-artifact@v4
-        with: 
-          name: rendered
-          path: rendered.yaml 
