@@ -9,3 +9,7 @@ output "ecr_repo_url" {
 output "eks_cluster_name" {
   value = module.eks_main.cluster_name
 }
+
+output "rds_endpoint" {
+  value = module.postgres.rds_endpoint
+}
