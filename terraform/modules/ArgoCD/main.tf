@@ -4,7 +4,7 @@ resource "helm_release" "argocd" {
   create_namespace = true 
   repository = var.repository
   chart      = var.chart
-  version    = "9.4.7"
+  version    = "7.7.11"
 
 
   values = [

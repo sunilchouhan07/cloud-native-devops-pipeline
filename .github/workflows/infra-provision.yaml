@@ -7,9 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
-      contents: read
-    working-directory: terraform/Infrastructure
-      
+      contents: read      
     steps:
       - name: Checkout Code 
         uses: actions/checkout@v4
@@ -24,14 +22,17 @@ jobs:
         uses: hashicorp/setup-terraform@v3 
       
       - name: Terraform Initialize
+        working-directory: terraform/Infrastructure
         run: |
           terraform init
           terraform validate
       - name: Create and Select Workspace
+        working-directory: terraform/Infrastructure
         run: |
           terraform workspace select dev || terraform workspace new dev 
                   
       - name: Terraform Plan
+        working-directory: terraform/Infrastructure
         run: terraform plan -out=tfplan
 
       - name: Artifact Plan
@@ -47,7 +48,6 @@ jobs:
   argocd:
     needs: core-infra 
     runs-on: ubuntu-latest
-    working-directory: terraform/Cluster-Bootstrap
     permissions:
       id-token: write
       contents: read
@@ -66,11 +66,13 @@ jobs:
         uses: hashicorp/setup-terraform@v3 
       
       - name: Terraform Initialize
+        working-directory: terraform/Cluster-Bootstrap
         run: |
           terraform init
           terraform validate
 
       - name: Create and Select Workspace
+        working-directory: terraform/Cluster-Bootstrap
         run: |
           terraform workspace select dev || terraform workspace new dev 
 

@@ -1,0 +1,77 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: loki
+  namespace: argocd
+
+spec:
+  project: default
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+
+  source:
+    repoURL: https://grafana.github.io/helm-charts
+    chart: loki
+    targetRevision: 6.35.1
+
+    helm:
+      values: |
+        deploymentMode: SingleBinary
+
+        loki:
+          auth_enabled: false
+
+          commonConfig:
+            replication_factor: 1
+
+          storage:
+            type: filesystem
+
+          schemaConfig:
+            configs:
+              - from: 2024-01-01
+                store: tsdb
+                object_store: filesystem
+                schema: v13
+                index:
+                  prefix: loki_index_
+                  period: 24h
+
+        singleBinary:
+          replicas: 1
+
+          persistence:
+            enabled: false
+
+          extraVolumes:
+            - name: loki-storage
+              emptyDir: {}
+
+          extraVolumeMounts:
+            - name: loki-storage
+              mountPath: /var/loki
+
+        read:
+          replicas: 0
+
+        write:
+          replicas: 0
+
+        backend:
+          replicas: 0
+
+        chunksCache:
+          enabled: false
+
+        test:
+          enabled: false
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+
+    syncOptions:
+      - CreateNamespace=true
