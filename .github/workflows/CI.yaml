@@ -3,8 +3,6 @@ on:
   push:
     branches:
       - main
-    paths:
-    - "gitops-k8s/apps/**"
 
 jobs:
   build-push:
@@ -14,15 +12,28 @@ jobs:
       contents: write
 
     env:
-      IMAGE_TAG: ${{ github.sha }}
-      ECR_REPOSITORY: dev-gitops-repo
+      IMAGE_TAG: ${{ github.sha }} 
+      BACKEND_REPO: employee-management-backend
+      FRONTEND_REPO: employee-management-frontend
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout Current Repo
         uses: actions/checkout@v4
-        with: 
-          fetch-depth: 0
-          persist-credentials: true 
+
+
+      - name: Checkout Employee Management Repo 
+        uses: actions/checkout@v4 
+        with:
+          repository: sunilchouhan07/employee_management_system
+          token: ${{ secrets.GH_PAT }}
+          path: employee-app 
+
+      - name: Verify Employee Repo
+        run: |
+          ls -la employee-app
+          ls -la employee-app/backend
+          ls -la employee-app/frontend
+
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -34,11 +45,17 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name:  Build and Push 
-        working-directory: gitops-k8s/apps/
+      - name:  Build and Push Backend 
+        working-directory: employee-app/backend/
         run: | 
-          docker build -t ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG .
-          docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG
+          docker build -t ${{ steps.login-ecr.outputs.registry }}/${{ env.BACKEND_REPO }}:$IMAGE_TAG .
+          docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.BACKEND_REPO }}:$IMAGE_TAG
+
+      - name:  Build and Push Frontend 
+        working-directory: employee-app/frontend/
+        run: | 
+          docker build -t ${{ steps.login-ecr.outputs.registry }}/${{ env.FRONTEND_REPO }}:$IMAGE_TAG .
+          docker push ${{ steps.login-ecr.outputs.registry }}/${{ env.FRONTEND_REPO }}:$IMAGE_TAG
 
       - name: Helm Lint
         run: helm lint gitops-k8s/helm/myapp
@@ -49,7 +66,9 @@ jobs:
 
       - name: Update Helm Image Tag 
         run: |
-          sed -i "s/tag:.*/tag: ${{ github.sha }}/" gitops-k8s/helm/myapp/values.yaml
+          sed -i "/frontend:/,/tag:/ s/tag:.*/tag: ${IMAGE_TAG}/" gitops-k8s/helm/myapp/values.yaml
+          sed -i "/backend:/,/tag:/ s/tag:.*/tag: ${IMAGE_TAG}/" gitops-k8s/helm/myapp/values.yaml
+
 
       - name: Commit Updated Helm Values 
         run: |
@@ -61,5 +80,4 @@ jobs:
 
       - name: Push Changes 
         run: |
-          git pull --rebase
-          git push
+          git push origin main
