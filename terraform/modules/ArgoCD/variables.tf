@@ -18,4 +18,3 @@ variable "chart" {
 # variable "version" {
 #   type = string
 # }
-
