@@ -42,6 +42,7 @@ jobs:
           path: terraform/Infrastructure/tfplan
 
       - name: Terraform Apply
+        working-directory: terraform/Infrastructure
         run: terraform apply -auto-approve tfplan
 
 
@@ -87,6 +88,7 @@ jobs:
           path: terraform/Cluster-Bootstrap/tfplan
 
       - name: Terraform Apply
+        working-directory: terraform/Cluster-Bootstrap
         run: terraform apply -auto-approve tfplan
 
     
