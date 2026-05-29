@@ -8,8 +8,9 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    working-directory: terraform/Infrastructure
-      
+    defaults:
+        run:
+          working-directory: terraform/Infrastructure      
     steps:
       - name: Checkout Code 
         uses: actions/checkout@v4
