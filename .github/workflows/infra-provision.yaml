@@ -79,6 +79,7 @@ jobs:
 
                   
       - name: Terraform Plan
+        working-directory: terraform/Cluster-Bootstrap
         run: terraform plan -out=tfplan
 
       - name: Artifact Plan
