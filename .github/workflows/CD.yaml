@@ -1,6 +1,7 @@
 name: CD Pipeline 
 on:
   workflow_dispatch:
+  
 
 jobs:
   argocd:
@@ -37,6 +38,11 @@ jobs:
 
       - name: Deploy ArgoCD Applications
         working-directory: gitops-k8s/monitoring
+        run: |
+          kubectl apply -f .
+
+      - name: Deploy ArgoCD Monitoring Applications
+        working-directory: gitops-k8s/argocd
         run: |
           kubectl apply -f .
 

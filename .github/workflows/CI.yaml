@@ -3,6 +3,8 @@ on:
   push:
     branches:
       - main
+  # workflow_dispatch:
+    
 
 jobs:
   build-push:
@@ -66,9 +68,8 @@ jobs:
 
       - name: Update Helm Image Tag 
         run: |
-          sed -i "/frontend:/,/tag:/ s/tag:.*/tag: ${IMAGE_TAG}/" gitops-k8s/helm/myapp/values.yaml
-          sed -i "/backend:/,/tag:/ s/tag:.*/tag: ${IMAGE_TAG}/" gitops-k8s/helm/myapp/values.yaml
-
+          sed -i "/frontend:/,/tag:/ s/tag:.*/tag: frontend-${IMAGE_TAG}/" gitops-k8s/helm/myapp/values.yaml
+          sed -i "/backend:/,/tag:/ s/tag:.*/tag: backend-${IMAGE_TAG}/" gitops-k8s/helm/myapp/values.yaml
 
       - name: Commit Updated Helm Values 
         run: |

@@ -1,18 +1,29 @@
 frontend:
   image:
     repository: 364478544576.dkr.ecr.ap-south-1.amazonaws.com/dev-gitops-repo
-    tag: frontend-latest
+    tag: d1fb555cc5677f9a3a056aac64ab6f596ea4ef61
 
   replicaCount: 1
 
+  service:
+    type: ClusterIP
+    port: 3000
 
 backend:
-  image: 
+  image:
     repository: 364478544576.dkr.ecr.ap-south-1.amazonaws.com/dev-gitops-repo
-    tag: backend-latest
-    replicaCount: 1
+    tag: d1fb555cc5677f9a3a056aac64ab6f596ea4ef61
 
+  replicaCount: 1
 
-database: 
+  service:
+    type: ClusterIP
+    port: 5000
+
+database:
   host: dev-employee-db.cl2i66i2usif.ap-south-1.rds.amazonaws.com
-  name: employee_db 
+  name: employee_db
+  port: 5432
+
+autoscaling:
+  enabled: false
