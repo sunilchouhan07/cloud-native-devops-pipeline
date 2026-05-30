@@ -24,6 +24,8 @@ database:
   host: dev-employee-db.cl2i66i2usif.ap-south-1.rds.amazonaws.com
   name: employee_db
   port: 5432
+  user: postgres
+  password: postgres123
 
 autoscaling:
   enabled: false
